@@ -1096,8 +1096,31 @@ function allRecipes(){
 
 const FIXED_CATEGORIES = ["Pescado", "Carne", "Vegetariano", "Cuchara", "Postres"];
 
+// Normaliza variantes en plural, mayúsculas o nombres antiguos a una categoría
+// canónica, sin tener que tocar los datos del JSON.
+const CATEGORY_ALIASES = {
+  "pescado":"Pescado", "pescados":"Pescado", "pescados y mariscos":"Pescado",
+  "marisco":"Pescado", "mariscos":"Pescado",
+  "carne":"Carne", "carnes":"Carne", "guiso":"Carne", "guisos":"Carne",
+  "vegetariano":"Vegetariano", "vegetariana":"Vegetariano",
+  "vegetarianos":"Vegetariano", "vegetarianas":"Vegetariano",
+  "verdura":"Vegetariano", "verduras":"Vegetariano",
+  "cuchara":"Cuchara", "cucharas":"Cuchara",
+  "postre":"Postres", "postres":"Postres",
+  "arroz":"Arroces", "arroces":"Arroces",
+  "entrante":"Entrantes", "entrantes":"Entrantes",
+  "otra":"Otras", "otras":"Otras", "otro":"Otras", "otros":"Otras",
+  "referencia":"Referencia"
+};
+function normalizeCategory(raw){
+  if(!raw) return "Otras";
+  const key = raw.trim().toLowerCase();
+  if(CATEGORY_ALIASES[key]) return CATEGORY_ALIASES[key];
+  return raw.trim().charAt(0).toUpperCase() + raw.trim().slice(1);
+}
+
 function getCategories(){
-  const fromData = Array.from(new Set(allRecipes().map(r=>r.category)));
+  const fromData = Array.from(new Set(allRecipes().map(r=>normalizeCategory(r.category))));
   const extra = fromData.filter(c => !FIXED_CATEGORIES.includes(c));
   return ["Todas", ...FIXED_CATEGORIES, ...extra];
 }
@@ -1240,7 +1263,7 @@ function renderChips(){
 function filteredRecipes(){
   const q = state.query.trim().toLowerCase();
   return allRecipes().filter(r=>{
-    const matchesCat = state.category==="Todas" || r.category===state.category;
+    const matchesCat = state.category==="Todas" || normalizeCategory(r.category)===state.category;
     if(!matchesCat) return false;
     if(!q) return true;
     const inTitle = r.title.toLowerCase().includes(q);
@@ -1920,12 +1943,17 @@ document.getElementById('importFileInput').addEventListener('change', async ()=>
     const incomingCustom = Array.isArray(parsed.customRecipes) ? parsed.customRecipes : [];
     const incomingOverrides = (parsed.overrides && typeof parsed.overrides==="object") ? parsed.overrides : {};
 
-    // añade las recetas importadas evitando colisiones de id con lo que ya hay
+    // si la receta ya existe (mismo id), la actualizamos en vez de duplicarla
+    let added = 0, updated = 0;
     incomingCustom.forEach(rec=>{
-      if(allRecipes().some(r=>r.id===rec.id)){
-        rec.id = uniqueId(rec.title || rec.id);
+      const idx = customRecipes.findIndex(r=>r.id===rec.id);
+      if(idx > -1){
+        customRecipes[idx] = rec;
+        updated++;
+      } else {
+        customRecipes.push(rec);
+        added++;
       }
-      customRecipes.push(rec);
     });
     overrides = { ...overrides, ...incomingOverrides };
 
@@ -1933,7 +1961,7 @@ document.getElementById('importFileInput').addEventListener('change', async ()=>
     renderChips();
     renderGrid();
     dataToolbarStatus.classList.remove('error');
-    dataToolbarStatus.textContent = `Importadas ${incomingCustom.length} receta(s) ✓`;
+    dataToolbarStatus.textContent = `Importadas: ${added} nueva(s), ${updated} actualizada(s) ✓`;
   }catch(e){
     dataToolbarStatus.classList.add('error');
     dataToolbarStatus.textContent = "El archivo no es un JSON válido de este cuaderno.";
