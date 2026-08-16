@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>Cuaderno de Recetas — Buscador</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
     color-scheme: light dark;
     --olive: var(--brick);
     --olive-dark: color-mix(in srgb, var(--brick) 55%, black 45%);
-    --mustard:#C9A227;
+    --mustard:#6E1423;
     --brick:#C0432F;
     --cream:#F7F1E1;
     --ink:#4A3524;
@@ -58,7 +58,7 @@
   header.hero{
     background:var(--olive);
     color:var(--cream);
-    padding:38px 20px 46px;
+    padding:calc(38px + env(safe-area-inset-top, 0px)) 20px 46px;
     position:relative;
     overflow:hidden;
     border-bottom:6px solid var(--mustard);
@@ -169,7 +169,7 @@
   .chip.active{
     background:var(--mustard);
     border-color:var(--mustard);
-    color:var(--olive-dark);
+    color:var(--cream);
     font-weight:700;
   }
 
@@ -531,9 +531,9 @@
     margin-top:22px;
     padding:8px 16px;
     border-radius:999px;
-    background:rgba(201,162,39,0.16);
+    background:color-mix(in srgb, var(--mustard) 25%, transparent);
     border:1px solid var(--mustard);
-    color:var(--mustard);
+    color:var(--cream);
     font-family:'JetBrains Mono', monospace;
     font-size:13px;
   }
@@ -558,7 +558,7 @@
   }
   .nav-btn.primary{
     background:var(--mustard);
-    color:var(--olive-dark);
+    color:var(--cream);
     border-color:var(--mustard);
   }
   .nav-btn:disabled{opacity:0.3; cursor:not-allowed;}
